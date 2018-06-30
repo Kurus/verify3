@@ -103,17 +103,51 @@ b2dv = np.vectorize(b2d)
 #     return np.uint8(bits)
 # f2b = np.vectorize(flt_byt)
 
+# def add(x):
+#    while len(x)!=1:#hiearchical addition
+#        t=[]
+#        for a in range(0,len(x),2):
+#            if a+1>=len(x):
+#                t.append(dq(x[a]))
+#                continue
+#            t.append(dq(x[a])+dq(x[a+1]))
+#        x=t
+#    return x[0]
+
 def add(x):
-    while len(x)!=1:#hiearchical addition
+    np.set_printoptions(linewidth=np.inf)
+    assert(x.size%128 == 0)
+    prt = np.split(x,x.size//128)
+    ans = []
+    for i in prt:
+        ii = i
+        assert(ii.size==128)
+        # print(ii)
+        for n in range(0,3):#64-64 to 8-8 (1x1-3x3)
+            t=[]
+            for a in range(0,len(ii),2):
+                t.append(dq(ii[a])+dq(ii[a+1]))
+            ii = np.array(t)
+        assert(ii.size==16)
+        # print(ii)
         t=[]
-        print(x)
-        for a in range(0,len(x),2):
-            if a+1>=len(x):
-                t.append(dq(x[a]))
-                continue
-            t.append(dq(x[a])+dq(x[a+1]))
-        x=t
-    return x[0]
+        for a in range(0,8):
+            t.append(dq(ii[a])+dq(ii[a+8]))
+        ii=np.array(t)
+        assert(ii.size==8)
+        # print(ii)
+        for n in range(0,3):
+            t=[]
+            for a in range(0,len(ii),2):
+                t.append(dq(ii[a])+dq(ii[a+1]))
+            ii = np.array(t)
+        assert(ii.size==1)
+        # print(ii)
+        ans.append(ii[0])
+    res = 0
+    for a in ans:
+        res = dq(res)+dq(a)
+    return dq(res)
 
 #######################         Input image
 in_l = np.zeros(dim_p*dim_p*dep, dtype='uint8').reshape((dim_p,dim_p,dep))
@@ -286,141 +320,154 @@ for x in range(0,dim):
         exp_out_3_b.write(bytearray(lis))
         exp_out_3.write(str(lis)[1:-1]+'\n')
 
-# ############################# pooling
-# dim_o = (dim - 1)//2
-# # out_1 = np.arange(ker*dim*dim, dtype='uint8').reshape((ker,dim,dim)) #test pool
-# # print(out_1)
-# pool_1 = np.zeros((ker,dim_o,dim_o), dtype = 'uint8') #initialize
-# for x in range(0,dim_o):
-#     xx = x*2
-#     for y in range(0,dim_o):
-#         yy = y*2
-#         pool_1[:,x,y]= np.amax(out_1[:,xx:xx+3,yy:yy+3],(1,2))
-# # print(out_1[:,:,:]);print(pool_1[:,:,:]) # pool checking 
-# pool_out_1 = open("pool_1.txt","w")
-# pool_out_1_b = open("pool_1.bin","wb")
-# # print(pool_1)
-# for x in range(0,dim_o):
-#     for y in range(0,dim_o):
-#         lis=pool_1[:,x,y]
-#         pool_out_1_b.write(bytearray(lis))
-#         pool_out_1.write(str(lis)[1:-1]+'\n')
+############################# pooling
+dim_o = (dim - 1)//2
+# out_1 = np.arange(ker*dim*dim, dtype='float64').reshape((ker,dim,dim)) #test pool
+# print(out_1)
+pool_1 = np.zeros((ker,dim_o,dim_o), dtype = 'float64') #initialize
+for x in range(0,dim_o):
+    xx = x*2
+    for y in range(0,dim_o):
+        yy = y*2
+        pool_1[:,x,y]= np.amax(out_1[:,xx:xx+3,yy:yy+3],(1,2))
 
-# # out_3 = np.arange(ker*dim*dim, dtype='uint8').reshape((ker,dim,dim)) #test pool
-# # print(out_3)
-# pool_3 = np.zeros((ker,dim_o,dim_o), dtype = 'uint8')
-# for x in range(0,dim_o):
-#     xx = x*2
-#     for y in range(0,dim_o):
-#         yy = y*2
-#         pool_3[:,x,y]= np.amax(out_3[:,xx:xx+3,yy:yy+3],(1,2))
+# print("before pool 1")
+# print(out_1[0,:,:]);
+# print("after pool 1")
+# print(pool_1[0,:,:]) # pool checking 
 
-# pool_out_3 = open("pool_3.txt","w")
-# pool_out_3_b = open("pool_3.bin","wb")
-# # print(pool_3)
-# for x in range(0,dim_o):
-#     for y in range(0,dim_o):
-#         lis=pool_3[:,x,y]
-#         pool_out_3_b.write(bytearray(lis))
-#         pool_out_3.write(str(lis)[1:-1]+'\n')
+pool_out_1 = open("pool_1.txt","w")
+pool_out_1_b = open("pool_1.bin","wb")
+# print(pool_1)
+for x in range(0,dim_o):
+    for y in range(0,dim_o):
+        lis=pool_1[:,x,y]
+        pool_out_1_b.write(bytearray(lis))
+        pool_out_1.write(str(lis)[1:-1]+'\n')
 
-# ########################## squeeze
-# sq_in=[] # dep*dim*dim
-# dep = ker*2 # TODO firs layer no ned 2
-# if pool_en == 1: # ########TODO add first layer heere
-#     sq_in = np.concatenate((pool_1, pool_3), axis=0)
-#     dim_sq = dim_o
-# else:
-#     sq_in = np.concatenate((out_1, out_3), axis=0)
-#     dim_sq = dim
+# out_3 = np.arange(ker*dim*dim, dtype='float64').reshape((ker,dim,dim)) #test pool
+# print(out_3)
+pool_3 = np.zeros((ker,dim_o,dim_o), dtype = 'float64')
+for x in range(0,dim_o):
+    xx = x*2
+    for y in range(0,dim_o):
+        yy = y*2
+        pool_3[:,x,y]= np.amax(out_3[:,xx:xx+3,yy:yy+3],(1,2))
 
-# # print(out_1[31,:,:])
-# # print(out_3[0,:,:])
-# # print(sq_in[31:33,:,:])
-# # sq_in = np.rollaxis(sq_in,0,3)
+# print("before pool 3")
+# print(out_3[0,:,:]);
+# print("after pool 3")
+# print(pool_3[0,:,:]) # pool checking 
 
-# ########################   squ kernel
-# if random == 0:
-#     #sq_ker_l = np.full(sq_ker*dep,65,dtype='uint8').reshape((sq_ker,dep))
-#     sq_ker_l = np.random.randint(low=0, high=255, size = (sq_ker*dep),dtype='uint8').reshape((sq_ker,dep))
-#     # sq_ker_l = np.zeros(sq_ker*dep, dtype='uint8').reshape((sq_ker,dep))
-# else:
-#     sq_ker_l = np.random.randint(low = 0, high = 255, size = (sq_ker,dep), dtype='uint8')
+pool_out_3 = open("pool_3.txt","w")
+pool_out_3_b = open("pool_3.bin","wb")
+# print(pool_3)
+for x in range(0,dim_o):
+    for y in range(0,dim_o):
+        lis=pool_3[:,x,y]
+        pool_out_3_b.write(bytearray(lis))
+        pool_out_3.write(str(lis)[1:-1]+'\n')
 
-# sq_k_1 = open("sq_ker.txt","w")
-# sq_k_1_b = open("sq_ker.bin","wb")
-# dep_h = dep//2
+########################## squeeze
+sq_in=[] # dep*dim*dim
+dep = ker*2 # TODO firs layer no ned 2
+if pool_en == 1: # ########TODO add first layer heere
+    sq_in = np.concatenate((pool_1, pool_3), axis=0)
+    dim_sq = dim_o
+else:
+    sq_in = np.concatenate((out_1, out_3), axis=0)
+    dim_sq = dim
 
-# rep_no = 1
-# if(sq_rep == 1):
-#     rep_no = dim_sq
-# for r in range(0,rep_no):
-#     for x in range(0,sq_ker):
-#         for z in range(0,dep_h,8):
-#             lis = sq_ker_l[x,z+dep_h:z+dep_h+8]#kerle of 3x3 part
-#             sq_k_1.write(str(lis)[1:-1]+'\n')
-#             sq_k_1_b.write(bytearray(lis))
+# print(out_1[31,:,:])
+# print(out_3[0,:,:])
+# print(sq_in[31:33,:,:])
+# sq_in = np.rollaxis(sq_in,0,3)
 
-#             lis = sq_ker_l[x,z:z+8]
-#             sq_k_1.write(str(lis)[1:-1]+'\n')
-#             sq_k_1_b.write(bytearray(lis))
+########################   squ kernel
+if random == 0:
+    #sq_ker_l = np.full(sq_ker*dep,65,dtype='uint8').reshape((sq_ker,dep))
+    sq_ker_l = np.random.randint(low=0, high=255, size = (sq_ker*dep),dtype='uint8').reshape((sq_ker,dep))
+    # sq_ker_l = np.zeros(sq_ker*dep, dtype='uint8').reshape((sq_ker,dep))
+else:
+    sq_ker_l = np.random.randint(low = 0, high = 255, size = (sq_ker,dep), dtype='uint8')
+
+sq_k_1 = open("sq_ker.txt","w")
+sq_k_1_b = open("sq_ker.bin","wb")
+dep_h = dep//2
+
+rep_no = 1
+if(sq_rep == 1):
+    rep_no = dim_sq
+for r in range(0,rep_no):
+    for x in range(0,sq_ker):
+        for z in range(0,dep_h,8):
+            lis = sq_ker_l[x,z+dep_h:z+dep_h+8]#kerle of 3x3 part
+            sq_k_1.write(str(lis)[1:-1]+'\n')
+            sq_k_1_b.write(bytearray(lis))
+
+            lis = sq_ker_l[x,z:z+8]
+            sq_k_1.write(str(lis)[1:-1]+'\n')
+            sq_k_1_b.write(bytearray(lis))
     
-# sq_ker_l = b2dv(sq_ker_l) #########converting to float
-# print("sqeeze kernel");print(sq_ker_l[0,:])
+sq_ker_l = b2dv(sq_ker_l) #########converting to float
+print("sqeeze kernel");print(sq_ker_l[0,:])
 # #######################    squ bias
-# sq_bis_1 = np.full(sq_ker,0x00,dtype='uint8')
-# # sq_bis_1 = np.random.randint(low = 0, high = 255, size = (sq_ker),dtype='uint8')
-# # print(sq_bis_1)
-# f_sq_bis = open("sq_bias.txt","w")
-# f_sq_bis_b = open("sq_bias.bin","wb")
-# f_sq_bis.write(str(sq_bis_1)[1:-1]+'\n')
-# f_sq_bis_b.write(bytearray(sq_bis_1))
+sq_bis_1 = np.full(sq_ker,0x00,dtype='uint8')
+# sq_bis_1 = np.random.randint(low = 0, high = 255, size = (sq_ker),dtype='uint8')
+# print(sq_bis_1)
+f_sq_bis = open("sq_bias.txt","w")
+f_sq_bis_b = open("sq_bias.bin","wb")
+f_sq_bis.write(str(sq_bis_1)[1:-1]+'\n')
+f_sq_bis_b.write(bytearray(sq_bis_1))
 
-# sq_bis_1 = b2dv(sq_bis_1)# converting to float
+sq_bis_1 = b2dv(sq_bis_1)# converting to float
 # ######################    squ convoluve
-# sq_out = np.zeros((sq_ker,dep,dim_sq,dim_sq), dtype='float64')
-# for k in range(0,sq_ker):
-#     for l in range(0,dep):
-#         res = sg.convolve(sq_in[l,:,:],[[sq_ker_l[k,l]]] , "valid").astype(float)
-#         sq_out[k,l,:,:]=res
+sq_out = np.zeros((sq_ker,dep,dim_sq,dim_sq), dtype='float64')
+for k in range(0,sq_ker):
+    for l in range(0,dep):
+        res = sg.convolve(sq_in[l,:,:],[[sq_ker_l[k,l]]] , "valid").astype(float)
+        sq_out[k,l,:,:]=dqv(res)
 
-# print("sqeeze input")
-# print(sq_in[0,:,:])
-# print("sqeeze kernel")
-# print(sq_ker_l[0,0])
-# print("sqeeze out before addtition, first layer, first kernel")
-# print(sq_out[0,:,0,0])
-# print(sum(sq_out[0,:,0,0]))
+print("squ input before add")
+inkk=0
+print("layer " + str(inkk))
+print(sq_in[inkk,:,:])
+print("kernel")
+print(sq_ker_l[0,inkk])
+print("output ")
+print(sq_out[0,inkk,:,:])
+print("single pixe")
+print(sq_out[0,:,0,0])
 
-# squ_out_tmp = np.zeros((sq_ker,dim_sq,dim_sq), dtype='float64')
-# for a in range(0,sq_ker):
-#     for b in range(0,dim_sq):
-#         for c in range(0,dim_sq):
-#             squ_out_tmp[a,b,c]=add(sq_out[a,:,b,c])
-# sq_out = squ_out_tmp
+squ_out_tmp = np.zeros((sq_ker,dim_sq,dim_sq), dtype='float64')
+for a in range(0,sq_ker):
+    for b in range(0,dim_sq):
+        for c in range(0,dim_sq):
+            squ_out_tmp[a,b,c]=add(sq_out[a,:,b,c])
+sq_out = squ_out_tmp
 # print("after addition single pixel")
 # print(sq_out[:,0,0])
-# # print(sq_bis_1)
-# for i in range(0,sq_ker):
-#     sq_out[i,:,:] = sq_out[i,:,:] + sq_bis_1[i]
-# sq_out[sq_out < 0] = 0 # no need for positive
-# # print(sq_out[:,0,0])
+# print(sq_bis_1)
+for i in range(0,sq_ker):
+    sq_out[i,:,:] = sq_out[i,:,:] + sq_bis_1[i]
+sq_out[sq_out < 0] = 0 # no need for positive
+# print(sq_out[:,0,0])
 
-# # sq_out = np.arange(sq_ker*dim_sq*dim_sq, dtype='uint8').reshape((sq_ker,dim_sq,dim_sq)) # test ouptu
-# # print(sq_out[0,:,:]);print('______')
-# f_sq_out_1 = open("sq_out.txt","w")
-# f_sq_out_1_b = open("sq_out.bin","wb")
-# for r in range(0,dim_sq):
-#     for d in range(0,sq_ker):
-#         lis = d2bv(sq_out[d,r,:])
-#         f_sq_out_1_b.write(bytearray(lis))
-#         f_sq_out_1.write(str(lis)[1:-1]+'\n')
+# sq_out = np.arange(sq_ker*dim_sq*dim_sq, dtype='uint8').reshape((sq_ker,dim_sq,dim_sq)) # test ouptu
+# print(sq_out[0,:,:]);print('______')
+f_sq_out_1 = open("sq_out.txt","w")
+f_sq_out_1_b = open("sq_out.bin","wb")
+for r in range(0,dim_sq):
+    for d in range(0,sq_ker):
+        lis = d2bv(sq_out[d,r,:])
+        f_sq_out_1_b.write(bytearray(lis))
+        f_sq_out_1.write(str(lis)[1:-1]+'\n')
 
-# ########################     avg pool
-# sq_bis_1 = np.ones(sq_ker,dtype='uint8') # actual value for convoution
-# if av_pool_en == 1:
-#     av_pool = np.sum(sq_out,axis = (1,2), dtype = 'uint8')
-#     f_av_out_1 = open("av_pool_out.txt","w")
-#     f_av_out_1_b = open("av_pool_out.bin","wb")
-#     f_av_out_1_b.write(bytearray(av_pool))
-#     f_av_out_1.write(str(av_pool)[1:-1]+'\n')
+########################     avg pool
+sq_bis_1 = np.ones(sq_ker,dtype='uint8') # actual value for convoution
+if av_pool_en == 1:
+    av_pool = np.sum(sq_out,axis = (1,2), dtype = 'uint8')
+    f_av_out_1 = open("av_pool_out.txt","w")
+    f_av_out_1_b = open("av_pool_out.bin","wb")
+    f_av_out_1_b.write(bytearray(av_pool))
+    f_av_out_1.write(str(av_pool)[1:-1]+'\n')
