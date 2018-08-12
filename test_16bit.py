@@ -38,6 +38,7 @@ from ctypes import *
 
 def dq(x):
     bits = cast(pointer(c_double(x)), POINTER(c_int64)).contents.value
+    bits = bits+0x0000020000000000
     e = ((bits&0x7FF0000000000000)>>52) - 1008
     man = bits&0x000FFC0000000000
     if e==0 and man==0:
