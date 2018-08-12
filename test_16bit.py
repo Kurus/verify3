@@ -2,6 +2,7 @@
 # using normal float
 import numpy as np
 from scipy import signal as sg
+import random as rn
 dim = 3; dep = 4; ker = 32
 dim = 3;dep = 3;ker=64
 dim_p=dim + 2
@@ -160,10 +161,10 @@ def add(x):
 #######################         Input image
 in_l = np.zeros(dim_p*dim_p*dep, dtype='uint16').reshape((dim_p,dim_p,dep))
 if random == 0:
-    in_ori = np.full(dim*dim*dep,0, dtype='uint16').reshape((dim,dim,dep))
-    in_ori[:,:,0] = np.arange(dim*dim,dtype='uint16').reshape(dim,dim)
+    # in_ori = np.full(dim*dim*dep,0, dtype='uint16').reshape((dim,dim,dep))
+    # in_ori[:,:,0] = np.arange(dim*dim,dtype='uint16').reshape(dim,dim)
     # in_ori[:,:,1] = np.arange(dim*dim,dtype='uint16').reshape(dim,dim)
-    # in_ori = np.random.randint(low = 0, high = 65536, size = (dim*dim*dep),dtype='uint16').reshape((dim,dim,dep))
+    in_ori = np.random.randint(low = 0, high = 0x5c00, size = (dim*dim*dep),dtype='uint16').reshape((dim,dim,dep))
     # in_ori = np.full(dim*dim*dep,0x3c00,dtype='uint16').reshape((dim,dim,dep))
 else:
     in_ori = np.random.randint(low = 0, high = 65536, size = (dim,dim,dep), dtype='uint16')
@@ -184,8 +185,11 @@ in_l = b2dv(in_l)
 print("input layer");print(in_l[:,:,0]); 
 ########################        expand kernels 
 # ker_l_1 = np.zeros(ker*dep, dtype='uint16').reshape((ker,dep))
-ker_l_1 = np.full(ker*dep,0x3c00,dtype='uint16').reshape((ker,dep))
+# ker_l_1 = np.full(ker*dep,0x3c00,dtype='uint16').reshape((ker,dep))
 # ker_l_1 = np.random.randint(low = 0, high = 65536, size = (ker*dep),dtype='uint16').reshape((ker,dep))
+# ker_l_1 = d2bv(np.random.uniform(low=-1.0, high=1.0, size=(ker,dep))).astype('uint16')
+ker_l_1 = d2bv(np.random.normal(size=(ker,dep))).astype('uint16')
+
 f_k_1 = open("ker_1x1.txt","w")
 f_k_1_b_list = []
 for z in range(0,dep):
@@ -197,9 +201,10 @@ for z in range(0,dep):
 np.array(f_k_1_b_list).astype('uint16').tofile('ker_1x1.bin')# binary writing order 256 -> 00 01, 1 ->01 00
 
 # ker_l_3 = np.arange(ker*dep*9, dtype='uint16').reshape((ker,dep,9))
-ker_l_3 = np.full(ker*dep*9,0x3c00,dtype='uint16').reshape((ker,dep,9))
+# ker_l_3 = np.full(ker*dep*9,0x3c00,dtype='uint16').reshape((ker,dep,9))
 # ker_l_3 = np.random.randint(low = 0, high = 65536, size = (ker,dep,9),dtype='uint16').reshape((ker,dep,9))
 # print(ker_l_3[0,0,:]);print("________")
+ker_l_3 = d2bv(np.random.normal(size=(ker,dep,9))).astype('uint16')
 f_k_3 = open("ker_3x3.txt","w")
 f_k_3_b_list = []
 for m in range(0,dim): # repet 3x3 kernel
@@ -224,8 +229,10 @@ print("expand kernel 3");print(ker_l_3[0, 0,:])
 ########################        exapnd bias
 bis_1 = np.full(ker,0x00,dtype='uint16') #one
 # bis_1 = np.random.randint(low = 0, high = 65536, size = (ker),dtype='uint16')
+bis_1 = d2bv(np.random.normal(size=(ker))).astype('uint16')
 bis_3 = np.full(ker,0x00,dtype='uint16')
 # bis_3 = np.random.randint(low = 0, high = 65536, size = (ker),dtype='uint16')
+bis_3 = d2bv(np.random.normal(size=(ker))).astype('uint16')
 b_bis = open("bias.txt","w")
 b_bis_b_list = []
 for i in range(0,ker,4):
