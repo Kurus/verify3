@@ -37,7 +37,6 @@ from ctypes import *
 # q12 = np.vectorize(qq)
 
 def dq(x):
-    return b2d(d2b(x)) # hack for now
     bits = cast(pointer(c_double(x)), POINTER(c_int64)).contents.value
     bits = bits+0x0000020000000000
     e = ((bits&0x7FF0000000000000)>>52) - 1008
