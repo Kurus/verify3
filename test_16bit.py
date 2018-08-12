@@ -1,4 +1,4 @@
-# for 16 bit
+# for 16 bit 
 # using normal float
 import numpy as np
 from scipy import signal as sg
