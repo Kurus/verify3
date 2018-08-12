@@ -286,7 +286,7 @@ for k in range(0,ker):
                 # l2 = dq(l3) + dq(l4)
                 # l1 = dq(l1) + dq(l2)
                 # ll = dq(dq(l1) + dq(ll[0]) )
-                out_3[k,l,a,b]=ll
+                out_3[k,l,a,b]=dqv(ll)
         # res = sg.convolve(in_l[:,:,l],kk , "valid").astype(float) # addre lus #################### change to 12bit
         # out_3[k,l,:,:]=res
 print("exp3 out bef add")
