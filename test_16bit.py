@@ -187,8 +187,8 @@ print("input layer");print(in_l[:,:,0]);
 # ker_l_1 = np.zeros(ker*dep, dtype='uint16').reshape((ker,dep))
 # ker_l_1 = np.full(ker*dep,0x3c00,dtype='uint16').reshape((ker,dep))
 # ker_l_1 = np.random.randint(low = 0, high = 65536, size = (ker*dep),dtype='uint16').reshape((ker,dep))
-# ker_l_1 = d2bv(np.random.uniform(low=-1.0, high=1.0, size=(ker,dep))).astype('uint16')
-ker_l_1 = d2bv(np.random.normal(size=(ker,dep))).astype('uint16')
+ker_l_1 = d2bv(np.random.uniform(low=-1.0, high=1.0, size=(ker,dep))).astype('uint16')
+# ker_l_1 = d2bv(np.random.normal(size=(ker,dep))).astype('uint16')
 
 f_k_1 = open("ker_1x1.txt","w")
 f_k_1_b_list = []
@@ -204,7 +204,8 @@ np.array(f_k_1_b_list).astype('uint16').tofile('ker_1x1.bin')# binary writing or
 # ker_l_3 = np.full(ker*dep*9,0x3c00,dtype='uint16').reshape((ker,dep,9))
 # ker_l_3 = np.random.randint(low = 0, high = 65536, size = (ker,dep,9),dtype='uint16').reshape((ker,dep,9))
 # print(ker_l_3[0,0,:]);print("________")
-ker_l_3 = d2bv(np.random.normal(size=(ker,dep,9))).astype('uint16')
+ker_l_3 = d2bv(np.random.uniform(low=-1.0, high=1.0, size=(ker,dep,9))).astype('uint16')
+# ker_l_3 = d2bv(np.random.normal(size=(ker,dep,9))).astype('uint16')
 f_k_3 = open("ker_3x3.txt","w")
 f_k_3_b_list = []
 for m in range(0,dim): # repet 3x3 kernel
@@ -230,9 +231,13 @@ print("expand kernel 3");print(ker_l_3[0, 0,:])
 bis_1 = np.full(ker,0x00,dtype='uint16') #one
 # bis_1 = np.random.randint(low = 0, high = 65536, size = (ker),dtype='uint16')
 bis_1 = d2bv(np.random.normal(size=(ker))).astype('uint16')
-bis_3 = np.full(ker,0x00,dtype='uint16')
+bis_1 = d2bv(np.random.uniform(low=-1.0, high=1.0, size=(ker))).astype('uint16')
+
+# bis_3 = np.full(ker,0x00,dtype='uint16')
 # bis_3 = np.random.randint(low = 0, high = 65536, size = (ker),dtype='uint16')
-bis_3 = d2bv(np.random.normal(size=(ker))).astype('uint16')
+# bis_3 = d2bv(np.random.normal(size=(ker))).astype('uint16')
+bis_3 = d2bv(np.random.uniform(low=-1.0, high=1.0, size=(ker))).astype('uint16')
+
 b_bis = open("bias.txt","w")
 b_bis_b_list = []
 for i in range(0,ker,4):
