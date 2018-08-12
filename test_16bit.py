@@ -57,6 +57,7 @@ dqv = np.vectorize(dq)
 def d2b(x):
     x = cast(pointer(c_double(x)), POINTER(c_int64)).contents.value
     # print(hex(x))
+    x = x+0x0000020000000000
     e = ((x&0x7FF0000000000000)>>52) - 1008
     man = x&0x000FFC0000000000
     sgn = x&0x8000000000000000
@@ -66,6 +67,7 @@ def d2b(x):
         sgn = 0
     if e>31:
         e = 31
+        man = 0x000FFC0000000000
     bits = sgn>>48 | e<<10 | man>> 42# 64-8,2,52-2
     return np.uint16(bits)
 d2bv = np.vectorize(d2b)
@@ -81,7 +83,7 @@ def b2d(x):
     bits = ((x&0x8000)<<48) | (ee)<<52 | (x&0x3ff)<<42
     # print(hex(bits))
     return cast(pointer(c_int64(bits)), POINTER(c_double)).contents.value
-b2dv = np.vectorize(b2d) 
+b2dv = np.vectorize(b2d)  
 
 # def byt_flt(x):
 #     ee = ((x&0x7c)>>2)+112
