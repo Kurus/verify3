@@ -46,8 +46,8 @@ def dq(x):
     if e<0:
         bits=0
     if e>31:
-        bits = bits & 0x800fffffffffffff
-        bits = bits | ((31+1008)<<52)
+        bits = 0x40FFFC0000000000 | (bits & 0x8000000000000000)
+    # print(hex(bits))
     # bits = bits + 0x010000;
     # bits=(bits>>17)<<17
     bits=bits&0xFFFFFC0000000000
