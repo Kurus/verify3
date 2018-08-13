@@ -288,7 +288,7 @@ for k in range(0,ker):
         for a in range(0,dim):
             for b in range(0,dim):
                 ll = in_l[a:a+3,b:b+3,l].flatten()
-                ll = np.multiply(kk,ll)
+                ll = dqv(np.multiply(kk,ll))
                 ll = np.sum(ll)# using default 64 bit summation instead fixed point summation
                 # l1 = dq(ll[1]) + dq(ll[2])  # old summation
                 # l2 = dq(ll[3]) + dq(ll[4])
