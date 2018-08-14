@@ -317,102 +317,114 @@ for r in range(0,dim):
 
 np.array(f_out_3_b_list).astype('uint16').tofile('out_3x3.bin')# binary writing order 256 -> 00 01, 1 ->01 00
 
+################################ part 1 #######################
 ############################ add bias and relu
-# out_1_tmp = np.zeros(ker*dim*dim, dtype='float64').reshape((ker,dim,dim))
-# for a in range(0,ker):# for exp kernel addition is sequential
-#     for b in range(0,dim):
-#         for c in range(0,dim):
-#             ans = 0.0
-#             for i in range(dep):
-#                 ans = dq(ans + dq(out_1[a,i,b,c]))
-#             out_1_tmp[a,b,c]=ans
-# # print(out_1_tmp[0,:,:])
-# out_1 = out_1_tmp
-# # out_1 = np.sum(out_1,1,dtype='float64') ########change to 12 bit
-# # print(out_1[0,:,:])
-# for i in range(0,ker):
-#     out_1[i,:,:] = dqv(dqv(out_1[i,:,:]) + dqv(bis_1[i]))
-# print("after expan1");print(out_1[0,:,:])
-# out_1[out_1 < 0] = 0.0 # no need for positive
-# exp_out_1 = open("exp_1.txt","w")
-# exp_out_1_b = open("exp_1.bin","wb")
-# for x in range(0,dim):
-#     for y in range(0,dim):
-#         lis=d2bv(out_1[:,x,y])
-#         exp_out_1_b.write(bytearray(lis))
-#         exp_out_1.write(str(lis)[1:-1]+'\n')
+out_1_tmp = np.zeros(ker*dim*dim, dtype='float64').reshape((ker,dim,dim))
+for a in range(0,ker):# for exp kernel addition is sequential
+    for b in range(0,dim):
+        for c in range(0,dim):
+            ans = 0.0
+            for i in range(dep):
+                ans = dq(ans + dq(out_1[a,i,b,c]))
+            out_1_tmp[a,b,c]=ans
+# print(out_1_tmp[0,:,:])
+out_1 = out_1_tmp
+# out_1 = np.sum(out_1,1,dtype='float64') ########change to 12 bit
+# print(out_1[0,:,:])
+for i in range(0,ker):
+    out_1[i,:,:] = dqv(dqv(out_1[i,:,:]) + dqv(bis_1[i]))
+print("after expan1");print(out_1[0,:,:])
+out_1[out_1 < 0] = 0.0 # no need for positive
+exp_out_1 = open("exp_1.txt","w")
+exp_out_1_b_list = []
+for x in range(0,dim):
+    for y in range(0,dim):
+        lis=d2bv(out_1[:,x,y])
+        # exp_out_1_b.write(bytearray(lis))
+        exp_out_1_b_list.append(lis)
+        exp_out_1.write(str(lis)[1:-1]+'\n')
+
+np.array(exp_out_1_b_list).astype('uint16').tofile('exp_1.bin')# binary writing order 256 -> 00 01, 1 ->01 00
+
+out_3_tmp = np.zeros(ker*dim*dim, dtype='float64').reshape((ker,dim,dim))
+for a in range(0,ker):# for exp kernel addition is sequential
+    for b in range(0,dim):
+        for c in range(0,dim):
+            ans = 0.0
+            for i in range(dep):
+                ans = dq(ans + dq(out_3[a,i,b,c]))
+            out_3_tmp[a,b,c]=ans
+out_3 = out_3_tmp
+# out_3 = np.sum(out_3,1,dtype='float64') ############# change
+for i in range(0,ker):
+    out_3[i,:,:] = dqv(dqv(out_3[i,:,:]) + dqv(bis_3[i]))
+out_3[out_3 < 0] = 0.0
+exp_out_3 = open("exp_3.txt","w")
+exp_out_3_b_list = []
+for x in range(0,dim):
+    for y in range(0,dim):
+        lis=d2bv(out_3[:,x,y])
+        # exp_out_3_b.write(bytearray(lis))
+        exp_out_3_b_list.append(lis)
+        exp_out_3.write(str(lis)[1:-1]+'\n')
+
+np.array(exp_out_3_b_list).astype('uint16').tofile('exp_3.bin')# binary writing order 256 -> 00 01, 1 ->01 00
+############################# pooling
+dim_o = (dim - 1)//2
+# out_1 = np.arange(ker*dim*dim, dtype='float64').reshape((ker,dim,dim)) #test pool
+# print(out_1)
+pool_1 = np.zeros((ker,dim_o,dim_o), dtype = 'float64') #initialize
+for x in range(0,dim_o):
+    xx = x*2
+    for y in range(0,dim_o):
+        yy = y*2
+        pool_1[:,x,y]= np.amax(out_1[:,xx:xx+3,yy:yy+3],(1,2))
+
+# print("before pool 1")
+# print(out_1[0,:,:]);
+# print("after pool 1")
+# print(pool_1[0,:,:]) # pool checking 
+
+pool_out_1 = open("pool_1.txt","w")
+pool_out_1_b_list = []
+# print(pool_1)
+for x in range(0,dim_o):
+    for y in range(0,dim_o):
+        lis=pool_1[:,x,y]
+        # pool_out_1_b.write(bytearray(lis))
+        pool_out_1_b_list.append(lis)
+        pool_out_1.write(str(lis)[1:-1]+'\n')
+
+np.array(pool_out_1_b_list).astype('uint16').tofile('pool_1.bin')# binary writing order 256 -> 00 01, 1 ->01 00
+# out_3 = np.arange(ker*dim*dim, dtype='float64').reshape((ker,dim,dim)) #test pool
+# print(out_3)
+pool_3 = np.zeros((ker,dim_o,dim_o), dtype = 'float64')
+for x in range(0,dim_o):
+    xx = x*2
+    for y in range(0,dim_o):
+        yy = y*2
+        pool_3[:,x,y]= np.amax(out_3[:,xx:xx+3,yy:yy+3],(1,2))
+
+# print("before pool 3")
+# print(out_3[0,:,:]);
+# print("after pool 3")
+# print(pool_3[0,:,:]) # pool checking 
+
+pool_out_3 = open("pool_3.txt","w")
+pool_out_3_b_list = []
+# print(pool_3)
+for x in range(0,dim_o):
+    for y in range(0,dim_o):
+        lis=pool_3[:,x,y]
+        # pool_out_3_b.write(bytearray(lis))
+        pool_out_3_b_list.append(lis)
+        pool_out_3.write(str(lis)[1:-1]+'\n')
+
+np.array(pool_out_3_b_list).astype('uint16').tofile('pool_3.bin')# binary writing order 256 -> 00 01, 1 ->01 00
 
 
-# out_3_tmp = np.zeros(ker*dim*dim, dtype='float64').reshape((ker,dim,dim))
-# for a in range(0,ker):# for exp kernel addition is sequential
-#     for b in range(0,dim):
-#         for c in range(0,dim):
-#             ans = 0.0
-#             for i in range(dep):
-#                 ans = dq(ans + dq(out_3[a,i,b,c]))
-#             out_3_tmp[a,b,c]=ans
-# out_3 = out_3_tmp
-# # out_3 = np.sum(out_3,1,dtype='float64') ############# change
-# for i in range(0,ker):
-#     out_3[i,:,:] = dqv(dqv(out_3[i,:,:]) + dqv(bis_3[i]))
-# out_3[out_3 < 0] = 0.0
-# exp_out_3 = open("exp_3.txt","w")
-# exp_out_3_b = open("exp_3.bin","wb")
-# for x in range(0,dim):
-#     for y in range(0,dim):
-#         lis=d2bv(out_3[:,x,y])
-#         exp_out_3_b.write(bytearray(lis))
-#         exp_out_3.write(str(lis)[1:-1]+'\n')
-
-# ############################# pooling
-# dim_o = (dim - 1)//2
-# # out_1 = np.arange(ker*dim*dim, dtype='float64').reshape((ker,dim,dim)) #test pool
-# # print(out_1)
-# pool_1 = np.zeros((ker,dim_o,dim_o), dtype = 'float64') #initialize
-# for x in range(0,dim_o):
-#     xx = x*2
-#     for y in range(0,dim_o):
-#         yy = y*2
-#         pool_1[:,x,y]= np.amax(out_1[:,xx:xx+3,yy:yy+3],(1,2))
-
-# # print("before pool 1")
-# # print(out_1[0,:,:]);
-# # print("after pool 1")
-# # print(pool_1[0,:,:]) # pool checking 
-
-# pool_out_1 = open("pool_1.txt","w")
-# pool_out_1_b = open("pool_1.bin","wb")
-# # print(pool_1)
-# for x in range(0,dim_o):
-#     for y in range(0,dim_o):
-#         lis=pool_1[:,x,y]
-#         pool_out_1_b.write(bytearray(lis))
-#         pool_out_1.write(str(lis)[1:-1]+'\n')
-
-# # out_3 = np.arange(ker*dim*dim, dtype='float64').reshape((ker,dim,dim)) #test pool
-# # print(out_3)
-# pool_3 = np.zeros((ker,dim_o,dim_o), dtype = 'float64')
-# for x in range(0,dim_o):
-#     xx = x*2
-#     for y in range(0,dim_o):
-#         yy = y*2
-#         pool_3[:,x,y]= np.amax(out_3[:,xx:xx+3,yy:yy+3],(1,2))
-
-# # print("before pool 3")
-# # print(out_3[0,:,:]);
-# # print("after pool 3")
-# # print(pool_3[0,:,:]) # pool checking 
-
-# pool_out_3 = open("pool_3.txt","w")
-# pool_out_3_b = open("pool_3.bin","wb")
-# # print(pool_3)
-# for x in range(0,dim_o):
-#     for y in range(0,dim_o):
-#         lis=pool_3[:,x,y]
-#         pool_out_3_b.write(bytearray(lis))
-#         pool_out_3.write(str(lis)[1:-1]+'\n')
-
-# ########################## squeeze
+######################## part 2 ##############################################3
+########################## squeeze
 # sq_in=[] # dep*dim*dim
 # dep = ker*2 # TODO firs layer no ned 2
 # if pool_en == 1: # ########TODO add first layer heere
@@ -422,10 +434,10 @@ np.array(f_out_3_b_list).astype('uint16').tofile('out_3x3.bin')# binary writing 
 #     sq_in = np.concatenate((out_1, out_3), axis=0)
 #     dim_sq = dim
 
-# # print(out_1[31,:,:])
-# # print(out_3[0,:,:])
-# # print(sq_in[31:33,:,:])
-# # sq_in = np.rollaxis(sq_in,0,3)
+# print(out_1[31,:,:])
+# print(out_3[0,:,:])
+# print(sq_in[31:33,:,:])
+# sq_in = np.rollaxis(sq_in,0,3)
 
 # ########################   squ kernel
 # if random == 0:
